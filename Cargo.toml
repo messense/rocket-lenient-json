@@ -1,0 +1,10 @@
+[package]
+name = "rocket-lenient-json"
+version = "0.1.0"
+authors = ["Messense Lv <messense@icloud.com>"]
+
+[dependencies]
+rocket = "0.3"
+serde = "1.0"
+serde_json = "1.0"
+log = "^0.3"
