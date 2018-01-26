@@ -1,7 +1,12 @@
 [package]
 name = "rocket-lenient-json"
 version = "0.1.0"
-authors = ["Messense Lv <messense@icloud.com>"]
+authors = ["Sergio Benitez <sb@sergio.bz>", "Messense Lv <messense@icloud.com>"]
+description = "A `rocket_contrib::Json` copy which removes the `Content-Type` check"
+keywords = ["rocket", "json"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+categories = ["web-programming::http-server"]
 
 [dependencies]
 rocket = "0.3"
