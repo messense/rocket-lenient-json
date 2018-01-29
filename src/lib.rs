@@ -96,12 +96,12 @@ impl<T: DeserializeOwned> FromData for Json<T> {
 
     fn from_data(request: &Request, data: Data) -> data::Outcome<Self, io::Error> {
         let size_limit = request.limits().get("json").unwrap_or(LIMIT);
-        let mut buf = String::new();
-        if let Err(e) = data.open().take(size_limit).read_to_string(&mut buf) {
+        let mut buf = Vec::new();
+        if let Err(e) = data.open().take(size_limit).read_to_end(&mut buf) {
             error_!("IO Error: {:?}", e);
             return Outcome::Failure((Status::BadRequest, e));
         }
-        serde_json::from_str(&buf)
+        serde_json::from_slice(&buf)
             .map(|val| Json(val))
             .map_err(|e| { error_!("Couldn't parse JSON body: {:?}", e); e.into() })
             .into_outcome(Status::BadRequest)
