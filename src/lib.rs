@@ -7,9 +7,9 @@ extern crate serde;
 extern crate serde_json;
 
 use std::ops::{Deref, DerefMut};
-use std::io::{self, Read};
+use std::io::Read;
 
-use rocket::outcome::{Outcome, IntoOutcome};
+use rocket::outcome::IntoOutcome;
 use rocket::request::Request;
 use rocket::data::{self, Data, FromData};
 use rocket::response::{self, Responder, content};
@@ -17,6 +17,24 @@ use rocket::http::Status;
 
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+
+pub use serde_json::error::Error as SerdeError;
+
+/// Like [`from_reader`] but eagerly reads the content of the reader to a string
+/// and delegates to `from_str`.
+///
+/// [`from_reader`]: https://docs.serde.rs/serde_json/fn.from_reader.html
+fn from_reader_eager<R, T>(mut reader: R) -> serde_json::Result<T>
+    where R: Read, T: DeserializeOwned
+{
+    let mut s = String::with_capacity(1024);
+    if let Err(io_err) = reader.read_to_string(&mut s) {
+        // Error::io is private to serde_json. Do not use outside of Rocket.
+        return Err(SerdeError::io(io_err));
+    }
+
+    serde_json::from_str(&s)
+}
 
 /// The JSON type: implements `FromData` and `Responder`, allowing you to easily
 /// consume and respond with JSON.
@@ -92,18 +110,13 @@ impl<T> Json<T> {
 const LIMIT: u64 = 1 << 20;
 
 impl<T: DeserializeOwned> FromData for Json<T> {
-    type Error = io::Error;
+    type Error = SerdeError;
 
-    fn from_data(request: &Request, data: Data) -> data::Outcome<Self, io::Error> {
+    fn from_data(request: &Request, data: Data) -> data::Outcome<Self, SerdeError> {
         let size_limit = request.limits().get("json").unwrap_or(LIMIT);
-        let mut buf = Vec::new();
-        if let Err(e) = data.open().take(size_limit).read_to_end(&mut buf) {
-            error_!("IO Error: {:?}", e);
-            return Outcome::Failure((Status::BadRequest, e));
-        }
-        serde_json::from_slice(&buf)
+        from_reader_eager(data.open().take(size_limit))
             .map(|val| Json(val))
-            .map_err(|e| { error_!("Couldn't parse JSON body: {:?}", e); e.into() })
+            .map_err(|e| { error_!("Couldn't parse JSON body: {:?}", e); e })
             .into_outcome(Status::BadRequest)
     }
 }
