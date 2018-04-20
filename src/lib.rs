@@ -18,6 +18,9 @@ use rocket::http::Status;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
+#[cfg(feature = "validator")] extern crate validator;
+#[cfg(feature = "validator")] use validator::{Validate, ValidationErrors};
+
 pub use serde_json::error::Error as SerdeError;
 
 /// Like [`from_reader`] but eagerly reads the content of the reader to a string
@@ -337,4 +340,11 @@ macro_rules! json {
     ($($json:tt)+) => {
         $crate::JsonValue(json_internal!($($json)+))
     };
+}
+
+#[cfg(feature = "validator")]
+impl<T: Validate> Validate for Json<T> {
+    fn validate(&self) -> Result<(), ValidationErrors> {
+        self.0.validate()
+    }
 }
