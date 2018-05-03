@@ -1,9 +1,8 @@
-#![feature(macro_reexport)]
+#![feature(use_extern_macros)]
 
 #[macro_use] extern crate log;
 #[macro_use] extern crate rocket;
 extern crate serde;
-#[macro_reexport(json_internal)]
 extern crate serde_json;
 
 use std::ops::{Deref, DerefMut};
@@ -19,6 +18,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 
 pub use serde_json::error::Error as SerdeError;
+pub use serde_json::json_internal;
 
 /// Like [`from_reader`] but eagerly reads the content of the reader to a string
 /// and delegates to `from_str`.
