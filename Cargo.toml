@@ -1,6 +1,6 @@
 [package]
 name = "rocket-lenient-json"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Sergio Benitez <sb@sergio.bz>", "Messense Lv <messense@icloud.com>"]
 description = "A `rocket_contrib::Json` copy which removes the `Content-Type` check"
 keywords = ["rocket", "json"]
