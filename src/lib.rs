@@ -14,8 +14,8 @@ use rocket::data::{self, Data, FromData};
 use rocket::response::{self, Responder, content};
 use rocket::http::Status;
 
-use serde::Serialize;
-use serde::de::DeserializeOwned;
+use serde::{Serialize, Serializer};
+use serde::de::{Deserialize, DeserializeOwned, Deserializer};
 
 pub use serde_json::error::Error as SerdeError;
 pub use serde_json::json_internal;
@@ -186,6 +186,18 @@ impl<T> DerefMut for Json<T> {
 /// ```
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct JsonValue(pub serde_json::Value);
+
+impl Serialize for JsonValue {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.0.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for JsonValue {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        serde_json::Value::deserialize(deserializer).map(JsonValue)
+    }
+}
 
 impl JsonValue {
     #[inline(always)]
